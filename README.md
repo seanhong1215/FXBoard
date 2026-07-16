@@ -1,5 +1,7 @@
 # FXBoard — 外匯即時儀表板與換匯試算 <br/><sub>Real-time FX Dashboard & Currency Converter</sub>
 
+[![CI](https://github.com/seanhong1215/stock-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/seanhong1215/stock-dashboard/actions/workflows/ci.yml)
+
 > 多幣別即時匯率總覽、歷史走勢圖、換匯試算(以 Decimal 處理金額精度),資料透過 Next.js 後端代理 + 快取層取自歐洲央行(ECB)。
 > Multi-currency live rates, historical trend charts, and a precision currency converter — data served through a Next.js backend proxy with a cache layer, sourced from the European Central Bank (via the Frankfurter API).
 

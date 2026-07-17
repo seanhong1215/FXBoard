@@ -46,15 +46,15 @@
 
 ## 截圖 / Screenshots
 
-**基準幣別 USD** — 匯率總覽 grid（旗標 / 貨幣對 / 漲跌 % / 迷你走勢）、換匯試算器、幣別對走勢圖。
-_Base = USD: rate grid, converter, and trend chart._
+**亮色主題 / Light theme** — 匯率 stat tile grid(貨幣對 / 帶符號漲跌 / 低調色迷你走勢)、換匯試算器、走勢圖(crosshair + tooltip + 表格檢視)。
+_Light theme: stat-tile rate grid, converter, and trend chart with crosshair, tooltip, and a table view._
 
-![FXBoard dashboard with USD base](docs/screenshots/dashboard-usd.jpg)
+![FXBoard light theme](docs/screenshots/dashboard-light.jpg)
 
-**一鍵切換基準幣別 EUR** — 所有貨幣對與走勢圖即時重算(EUR/USD、EUR/JPY…)。
-_Switching base to EUR recomputes every pair and the trend chart live._
+**深色主題 / Dark theme** — 同一套設計 token 的深色版本:非自動反轉,而是依深色表面重新選色並通過對比驗證。
+_Dark theme: the same token system re-stepped and re-validated for the dark surface — not an automatic flip._
 
-![FXBoard dashboard with EUR base](docs/screenshots/dashboard-eur.jpg)
+![FXBoard dark theme](docs/screenshots/dashboard-dark.jpg)
 
 ---
 
@@ -142,7 +142,10 @@ JavaScript 的 `0.1 + 0.2 === 0.30000000000000004`。在換匯、對帳、計息
 前端不直接呼叫第三方 API,而是透過 Next.js API Route 代理。好處:**避開 CORS**、隱藏 / 集中管理資料來源、可在後端加快取與速率限制、未來替換供應商只需改一處。此模式沿用了原始 demo 中已驗證可行的 `api/quote` 代理做法。
 
 ### 錯誤韌性 / Graceful degradation
-外部 API 失敗或回傳缺漏時,**保留前一次成功的資料**並顯示提示,而非整頁清空或崩潰;停市 / 缺值資料點會被過濾。即時資料介面必須具備的降級行為。
+外部 API 失敗或回傳缺漏時,**保留前一次成功的資料**並顯示提示,而非整頁清空或崩潰;停市 / 缺值資料點會被過濾;重新載入時維持前一次渲染僅降低透明度,不閃骨架屏。即時資料介面必須具備的降級行為。
+
+### 介面與資料視覺化設計 / UI & dataviz design
+介面建立在一套 **CSS design token 系統**上(表面 / 墨色 / 圖表 chrome / 資料色分層),明暗雙主題各自選色並以**色盲安全驗證器**通過對比與 CVD 檢查 —— 深色不是亮色的自動反轉。圖表遵循資料視覺化規範:2px 細線 + 10% 面積淡染、hairline 實線格線、**顏色跟實體走**(走勢線固定系列藍,漲跌交給帶正負號的 delta 文字)、選擇性直接標註(只標端點值)、**crosshair + tooltip** 互動層,並提供**表格檢視**作為每張圖的無障礙等價物 —— tooltip 只是增強,從不是讀值的唯一途徑。
 
 ---
 

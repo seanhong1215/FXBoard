@@ -15,16 +15,19 @@ function CurrencySelect({
   value,
   codes,
   onChange,
+  label,
 }: {
   value: string;
   codes: string[];
   onChange: (v: string) => void;
+  label: string;
 }) {
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm"
+      aria-label={label}
+      className="field px-3 py-2 text-sm font-medium"
     >
       {codes.map((c) => (
         <option key={c} value={c}>
@@ -60,50 +63,78 @@ export default function Converter({ rates, base }: ConverterProps) {
   };
 
   return (
-    <div className="p-5 rounded-xl border border-neutral-800 bg-neutral-900">
-      <h2 className="text-lg font-semibold mb-4">
-        換匯試算 <span className="text-neutral-500 text-sm">Converter</span>
+    <div className="card p-5">
+      <h2 className="text-[15px] font-semibold text-[var(--ink-primary)]">
+        換匯試算
+        <span className="ml-2 text-xs font-normal text-[var(--ink-muted)]">
+          Converter
+        </span>
       </h2>
 
-      <div className="flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-2.5">
         <div className="flex items-center gap-2">
           <input
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 tabular-nums"
+            className="field min-w-0 flex-1 px-3 py-2 text-[15px]"
             placeholder="金額 Amount"
+            aria-label="金額"
           />
-          <CurrencySelect value={from} codes={codes} onChange={setFrom} />
+          <CurrencySelect
+            value={from}
+            codes={codes}
+            onChange={setFrom}
+            label="來源幣別"
+          />
         </div>
 
         <div className="flex justify-center">
           <button
             type="button"
             onClick={swap}
-            aria-label="swap currencies"
-            className="text-neutral-400 hover:text-white transition-colors text-lg"
+            aria-label="交換幣別"
+            className="hairline-btn grid h-8 w-8 place-items-center rounded-full text-sm"
           >
             ⇅
           </button>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 tabular-nums text-xl font-bold">
-            {result !== null ? formatNumber(result, currencyDecimals(to)) : "—"}
-          </div>
-          <CurrencySelect value={to} codes={codes} onChange={setTo} />
+          <output
+            className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--page)] px-3 py-2"
+            aria-live="polite"
+          >
+            <span className="block truncate text-[22px] font-semibold text-[var(--ink-primary)]">
+              {result !== null
+                ? formatNumber(result, currencyDecimals(to))
+                : "—"}
+            </span>
+          </output>
+          <CurrencySelect
+            value={to}
+            codes={codes}
+            onChange={setTo}
+            label="目標幣別"
+          />
         </div>
       </div>
 
       {oneUnit !== null && (
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-[11px] text-[var(--ink-muted)]">
           1 {from} = {formatRate(Number(oneUnit))} {to}
         </p>
       )}
       {!valid && (
-        <p className="mt-1 text-xs text-red-400">請輸入有效金額 / Enter a valid amount</p>
+        <p className="mt-1 text-[11px]" style={{ color: "var(--delta-down)" }}>
+          請輸入有效金額 / Enter a valid amount
+        </p>
       )}
+
+      <p className="mt-4 border-t border-[var(--border)] pt-3 text-[11px] leading-relaxed text-[var(--ink-muted)]">
+        以 decimal.js 高精度運算,依幣別小數位進位(如 JPY 為 0 位),
+        避免浮點誤差。
+      </p>
     </div>
   );
 }

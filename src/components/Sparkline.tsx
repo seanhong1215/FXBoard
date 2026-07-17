@@ -8,16 +8,25 @@ import {
   CategoryScale,
   LinearScale,
 } from "chart.js";
+import { cssToken } from "@/lib/tokens";
 
 ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale);
 
 type SparklineProps = {
   data: number[];
-  up: boolean;
 };
 
-/** 卡片內的迷你走勢線(無座標軸)。 */
-export default function Sparkline({ data, up }: SparklineProps) {
+/**
+ * 卡片內的迷你走勢(stat tile 的 trend 元素)。
+ * 依 dataviz 規範:走勢線用「低調色」,只有目前端點用系列色 + 表面色圓環;
+ * 漲跌方向交給旁邊帶正負號的 delta 文字,不用線色表達。
+ */
+export default function Sparkline({ data }: SparklineProps) {
+  const spark = cssToken("--spark", "#9ec5f4");
+  const accent = cssToken("--series-1", "#2a78d6");
+  const surface = cssToken("--surface", "#fcfcfb");
+  const last = data.length - 1;
+
   return (
     <Line
       data={{
@@ -25,10 +34,15 @@ export default function Sparkline({ data, up }: SparklineProps) {
         datasets: [
           {
             data,
-            borderColor: up ? "rgb(34,197,94)" : "rgb(239,68,68)",
+            borderColor: spark,
             backgroundColor: "transparent",
             borderWidth: 2,
-            pointRadius: 0,
+            borderJoinStyle: "round",
+            borderCapStyle: "round",
+            pointRadius: data.map((_, i) => (i === last ? 3.5 : 0)),
+            pointBackgroundColor: accent,
+            pointBorderColor: surface,
+            pointBorderWidth: 2,
             tension: 0.3,
           },
         ],
@@ -36,8 +50,10 @@ export default function Sparkline({ data, up }: SparklineProps) {
       options={{
         responsive: true,
         maintainAspectRatio: false,
+        events: [], // 純裝飾性趨勢,數值由走勢圖與表格檢視提供
         plugins: { legend: { display: false }, tooltip: { enabled: false } },
         scales: { x: { display: false }, y: { display: false } },
+        layout: { padding: 4 },
         animation: false,
       }}
     />

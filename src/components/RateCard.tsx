@@ -17,6 +17,10 @@ type RateCardProps = RateCardData & {
   onSelect?: (code: string) => void;
 };
 
+/**
+ * 匯率 stat tile:label(貨幣對)/ value(匯率)/ delta(帶符號漲跌)/ trend(迷你走勢)。
+ * 漲跌以「+/− 符號 + 方向色」表達 — 顏色從不單獨承載意義。
+ */
 export default function RateCard({
   base,
   code,
@@ -33,42 +37,50 @@ export default function RateCard({
     <button
       type="button"
       onClick={() => onSelect?.(code)}
-      className={`w-full text-left p-4 rounded-xl border transition-colors bg-neutral-900 hover:border-neutral-600 ${
-        selected ? "border-sky-500 ring-1 ring-sky-500/40" : "border-neutral-800"
-      }`}
+      aria-pressed={selected}
+      className="card w-full p-4 text-left transition-shadow hover:shadow-sm"
+      style={
+        selected
+          ? {
+              borderColor: "var(--series-1)",
+              boxShadow:
+                "0 0 0 3px color-mix(in srgb, var(--series-1) 15%, transparent)",
+            }
+          : undefined
+      }
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xl leading-none">{meta.flag}</span>
-          <div>
-            <div className="font-semibold">
+      {/* label 列:貨幣對 + delta */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-lg leading-none shrink-0">{meta.flag}</span>
+          <div className="min-w-0">
+            <div className="text-[13px] font-semibold text-[var(--ink-primary)]">
               {base}/{code}
             </div>
-            <div className="text-xs text-neutral-400">{meta.name}</div>
+            <div className="truncate text-[11px] text-[var(--ink-muted)]">
+              {meta.name}
+            </div>
           </div>
         </div>
         <span
-          className={`text-xs font-medium ${
-            up ? "text-green-400" : "text-red-400"
-          }`}
+          className="shrink-0 text-xs font-semibold"
+          style={{ color: up ? "var(--delta-up)" : "var(--delta-down)" }}
         >
           {formatPercent(changePct)}
         </span>
       </div>
 
+      {/* value + trend */}
       <div className="mt-3 flex items-end justify-between gap-3">
-        <div className="text-2xl font-bold tabular-nums">
+        <div className="text-2xl font-semibold text-[var(--ink-primary)]">
           {formatRate(rate)}
         </div>
-        <div className="h-10 flex-1 max-w-[120px]">
-          {history.length > 1 ? (
-            <Sparkline data={history} up={up} />
-          ) : (
-            <div className="h-full" />
-          )}
+        <div className="h-9 w-[104px] shrink-0">
+          {history.length > 1 && <Sparkline data={history} />}
         </div>
       </div>
-      <div className="mt-1 text-[11px] text-neutral-500">
+
+      <div className="mt-1.5 text-[11px] text-[var(--ink-muted)]">
         1 {base} = {formatRate(rate)} {code}
       </div>
     </button>

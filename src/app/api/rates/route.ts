@@ -3,23 +3,27 @@
 
 import { cached } from "@/lib/cache";
 import { fetchLatest } from "@/lib/frankfurter";
-import { quoteSymbolsFor, DEFAULT_BASE } from "@/lib/currencies";
+import { parseFxQuery, QueryValidationError } from "@/lib/api-query";
+import {
+  cacheHeaders,
+  enforceRateLimit,
+  validationError,
+} from "@/lib/api-response";
+import { serverConfig } from "@/lib/server-config";
 import type { RatesResponse } from "@/lib/types";
 
-// 匯率變動不快，但要保持「即時感」→ 60 秒 TTL。
-const TTL_MS = 60_000;
+export const runtime = "nodejs";
+export const maxDuration = 10;
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const base = (searchParams.get("base") ?? DEFAULT_BASE).toUpperCase();
-  const symbols = searchParams.get("symbols")
-    ? searchParams.get("symbols")!.toUpperCase().split(",").filter(Boolean)
-    : quoteSymbolsFor(base);
-
-  const key = `latest:${base}:${symbols.sort().join(",")}`;
+  const limited = enforceRateLimit(req);
+  if (limited) return limited;
 
   try {
-    const { value, hit } = await cached(key, TTL_MS, () =>
+    const { base, symbols } = parseFxQuery(new URL(req.url).searchParams);
+    const key = `latest:${base}:${[...symbols].sort().join(",")}`;
+
+    const { value, hit } = await cached(key, serverConfig.ratesTtlMs, () =>
       fetchLatest(base, symbols)
     );
 
@@ -29,8 +33,13 @@ export async function GET(req: Request) {
       rates: value.rates,
       cached: hit,
     };
-    return Response.json(body);
+    return Response.json(body, {
+      headers: cacheHeaders(serverConfig.ratesTtlMs),
+    });
   } catch (err) {
+    if (err instanceof QueryValidationError) {
+      return validationError(err.message);
+    }
     console.error("[/api/rates]", err);
     return Response.json(
       { error: "Failed to fetch rates" },

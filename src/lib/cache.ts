@@ -1,14 +1,15 @@
 // 通用 TTL 記憶體快取 / Generic in-memory TTL cache
 //
-// 為什麼需要這一層：外部匯率 API 有速率限制，且匯率變動頻率不高。
-// 若前端每次載入都直接打外部 API，會浪費請求、拖慢載入、甚至被限流。
-// 這一層讓「命中即回」成為常態，只有快取過期時才真的向外部取數。
+// 外部匯率 API 具有速率限制，且參考匯率更新頻率較低。
+// TTL cache 可降低重複請求、縮短回應時間並減少觸發來源端限制的風險。
+// 快取未命中或過期時才會向外部來源取得資料。
 //
 // 設計成可測試：時間來源以 `nowFn` 注入，測試可用假時鐘驗證過期行為。
 
 type Entry<T> = { value: T; expiresAt: number };
 
 const store = new Map<string, Entry<unknown>>();
+const inFlight = new Map<string, Promise<unknown>>();
 
 let nowFn: () => number = () => Date.now();
 
@@ -25,6 +26,7 @@ export function __resetNow() {
 /** 清空整個快取（測試或手動失效用）。 */
 export function clearCache() {
   store.clear();
+  inFlight.clear();
 }
 
 export type CacheResult<T> = {
@@ -52,7 +54,18 @@ export async function cached<T>(
     return { value: existing.value, hit: true };
   }
 
-  const value = await loader();
-  store.set(key, { value, expiresAt: now + ttlMs });
-  return { value, hit: false };
+  const pending = inFlight.get(key) as Promise<T> | undefined;
+  if (pending) {
+    return { value: await pending, hit: true };
+  }
+
+  const request = loader();
+  inFlight.set(key, request);
+  try {
+    const value = await request;
+    store.set(key, { value, expiresAt: nowFn() + ttlMs });
+    return { value, hit: false };
+  } finally {
+    inFlight.delete(key);
+  }
 }

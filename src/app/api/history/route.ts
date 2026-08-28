@@ -3,24 +3,33 @@
 
 import { cached } from "@/lib/cache";
 import { fetchTimeSeries } from "@/lib/frankfurter";
-import { quoteSymbolsFor, DEFAULT_BASE } from "@/lib/currencies";
+import {
+  parseFxQuery,
+  parseHistoryDays,
+  QueryValidationError,
+} from "@/lib/api-query";
+import {
+  cacheHeaders,
+  enforceRateLimit,
+  validationError,
+} from "@/lib/api-response";
+import { serverConfig } from "@/lib/server-config";
 import type { HistoryResponse, SeriesPoint } from "@/lib/types";
 
-// 歷史每日資料變動極少 → 較長 TTL(1 小時)。
-const TTL_MS = 60 * 60_000;
+export const runtime = "nodejs";
+export const maxDuration = 10;
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const base = (searchParams.get("base") ?? DEFAULT_BASE).toUpperCase();
-  const symbols = searchParams.get("symbols")
-    ? searchParams.get("symbols")!.toUpperCase().split(",").filter(Boolean)
-    : quoteSymbolsFor(base);
-  const days = Math.min(Math.max(Number(searchParams.get("days")) || 8, 2), 90);
-
-  const key = `history:${base}:${symbols.sort().join(",")}:${days}`;
+  const limited = enforceRateLimit(req);
+  if (limited) return limited;
 
   try {
-    const { value, hit } = await cached(key, TTL_MS, () =>
+    const searchParams = new URL(req.url).searchParams;
+    const { base, symbols } = parseFxQuery(searchParams);
+    const days = parseHistoryDays(searchParams);
+    const key = `history:${base}:${[...symbols].sort().join(",")}:${days}`;
+
+    const { value, hit } = await cached(key, serverConfig.historyTtlMs, () =>
       fetchTimeSeries(base, symbols, days)
     );
 
@@ -44,8 +53,13 @@ export async function GET(req: Request) {
       series,
       cached: hit,
     };
-    return Response.json(body);
+    return Response.json(body, {
+      headers: cacheHeaders(serverConfig.historyTtlMs),
+    });
   } catch (err) {
+    if (err instanceof QueryValidationError) {
+      return validationError(err.message);
+    }
     console.error("[/api/history]", err);
     return Response.json(
       { error: "Failed to fetch history" },

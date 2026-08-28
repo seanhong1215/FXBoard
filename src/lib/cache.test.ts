@@ -46,4 +46,15 @@ describe("cached (TTL in-memory cache)", () => {
     await cached("b", 1000, () => loader(2));
     expect(loader).toHaveBeenCalledTimes(2);
   });
+
+  it("de-duplicates concurrent loads for the same key", async () => {
+    const loader = vi.fn(async () => 42);
+    const [first, second] = await Promise.all([
+      cached("same", 1000, loader),
+      cached("same", 1000, loader),
+    ]);
+    expect(first.value).toBe(42);
+    expect(second.value).toBe(42);
+    expect(loader).toHaveBeenCalledTimes(1);
+  });
 });

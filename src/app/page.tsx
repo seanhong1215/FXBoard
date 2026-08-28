@@ -43,7 +43,7 @@ export default function Home() {
     } catch (err) {
       console.error(err);
       // 錯誤韌性:保留前一次成功的資料,只顯示提示,不整頁清空。
-      setError("資料更新失敗,顯示先前資料 / Update failed, showing cached data");
+      setError("資料更新失敗,保留本次瀏覽的先前資料 / Update failed, showing previous data");
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export default function Home() {
               FXBoard
             </h1>
             <p className="mt-0.5 text-sm text-[var(--ink-secondary)]">
-              外匯即時儀表板與換匯試算 · Real-time FX dashboard
+              外匯參考匯率儀表板與換匯試算 · FX reference-rate dashboard
             </p>
             <p className="mt-0.5 text-[11px] text-[var(--ink-muted)]">
               資料來源:European Central Bank(via Frankfurter)
@@ -129,7 +129,7 @@ export default function Home() {
           {rates && (
             <span>
               資料時間 {rates.date} ·{" "}
-              {rates.cached ? "快取命中 cache hit" : "即時取得 fresh"}
+              {rates.cached ? "快取命中 cache hit" : "取得最新資料 fresh"}
             </span>
           )}
           {loading && (

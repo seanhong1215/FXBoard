@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FXBoard — 外匯即時儀表板",
+  title: "FXBoard — 外匯參考匯率儀表板",
   description:
-    "Real-time FX dashboard & currency converter powered by ECB reference rates.",
+    "Full-stack FX reference-rate dashboard and currency converter powered by ECB data.",
 };
 
 // 在 hydration 前套用已儲存的主題，避免明暗閃爍(FOUC)。

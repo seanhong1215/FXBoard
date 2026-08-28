@@ -33,7 +33,7 @@
   --delta-up: #006300;
   --delta-down: #d03b3b;
 
-  /* Status (icon + label, never color alone) */
+  /* Status uses an icon and label in addition to color. */
   --status-warning: #b45309;
 }
 

@@ -3,7 +3,7 @@
 > Full-stack FX Reference-rate Dashboard & Currency Converter<br/>
 > 外匯參考匯率儀表板與換匯試算
 
-[![CI](https://github.com/seanhong1215/stock-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/seanhong1215/stock-dashboard/actions/workflows/ci.yml)
+[![CI](https://github.com/seanhong1215/FXBoard/actions/workflows/ci.yml/badge.svg)](https://github.com/seanhong1215/FXBoard/actions/workflows/ci.yml)
 
 ## 專案介紹
 
